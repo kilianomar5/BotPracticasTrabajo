@@ -1,22 +1,10 @@
-import { Client, GatewayIntentBits, Partials, EmbedBuilder } from 'discord.js';
-import cron from 'node-cron';
-import dotenv from 'dotenv';
-import express from 'express'; 
+const { Client, GatewayIntentBits, Partials, EmbedBuilder } = require('discord.js');
+const cron = require('node-cron');
+const dotenv = require('dotenv');
+const express = require('express');
 
 dotenv.config();
 
-const app = express();
-const PORT = process.env.PORT || 3000;
-
-app.get('/', (req, res) => {
-  res.send('Bot Practicas Trabajo activo');
-});
-
-app.listen(PORT, () => {
-  console.log(`Servidor Express escuchando en el puerto ${PORT}`);
-});
-
-// Aquí sigue tu código de Discord.js
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -25,8 +13,6 @@ const client = new Client({
   ],
   partials: [Partials.Channel],
 });
-
-// Resto del código que ya tienes (variables, eventos, comandos...)
 
 const PREFIX = '!';
 
@@ -41,6 +27,7 @@ const AREA_CHANNELS = {
   proyectos: '1370373846401679460',
 };
 
+// Array en memoria para guardar reuniones
 let reuniones = [];
 
 client.on('ready', () => {
@@ -72,7 +59,7 @@ client.on('ready', () => {
           if (archivosHoy.size > 0) {
             resumen += `\n**AREA ${area.toUpperCase()}**\n`;
             archivosHoy.forEach((msg) => {
-              const nombresArchivos = msg.attachments.map((a) => a.name).join(', ');
+              const nombresArchivos = [...msg.attachments.values()].map((a) => a.name).join(', ');
               resumen += `--> Se subió(s) archivo(s) ${nombresArchivos} por <@${msg.author.id}>\n`;
             });
           }
@@ -176,7 +163,7 @@ client.on('messageCreate', async (message) => {
         if (archivosHoy.size > 0) {
           resumen += `\n**AREA ${area.toUpperCase()}**\n`;
           archivosHoy.forEach((msg) => {
-            const nombresArchivos = msg.attachments.map((a) => a.name).join(', ');
+            const nombresArchivos = [...msg.attachments.values()].map((a) => a.name).join(', ');
             resumen += `--> Se subió(s) archivo(s) ${nombresArchivos} por <@${msg.author.id}>\n`;
           });
         }
@@ -191,6 +178,18 @@ client.on('messageCreate', async (message) => {
 
     return message.channel.send(resumen);
   }
+});
+
+// --- Servidor Express para mantener activo el bot ---
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.get('/', (req, res) => {
+  res.send('Bot Practicas Trabajo activo');
+});
+
+app.listen(PORT, () => {
+  console.log(`Servidor Express escuchando en el puerto ${PORT}`);
 });
 
 client.login(process.env.TOKEN);
